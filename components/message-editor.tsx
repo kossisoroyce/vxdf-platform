@@ -8,6 +8,7 @@ import { deleteTrailingMessages } from '@/app/(chat)/actions';
 import { UseChatHelpers } from '@ai-sdk/react';
 
 export type MessageEditorProps = {
+  chatId: string;
   message: Message;
   setMode: Dispatch<SetStateAction<'view' | 'edit'>>;
   setMessages: UseChatHelpers['setMessages'];
@@ -15,6 +16,7 @@ export type MessageEditorProps = {
 };
 
 export function MessageEditor({
+  chatId,
   message,
   setMode,
   setMessages,
@@ -72,7 +74,8 @@ export function MessageEditor({
             setIsSubmitting(true);
 
             await deleteTrailingMessages({
-              id: message.id,
+              chatId,
+              messageId: message.id,
             });
 
             // @ts-expect-error todo: support UIMessage in setMessages

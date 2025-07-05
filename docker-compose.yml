@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  vxdf-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./vxdf-data:/app/vxdf-data
+    environment:
+      - NODE_ENV=production
+      # If you have an OpenAI API key, you can uncomment the following line
+      # and replace YOUR_API_KEY with your actual key.
+      # - OPENAI_API_KEY=YOUR_API_KEY

@@ -142,6 +142,7 @@ const PurePreviewMessage = ({
                       <div className="size-8" />
 
                       <MessageEditor
+                      chatId={chatId}
                         key={message.id}
                         message={message}
                         setMode={setMode}

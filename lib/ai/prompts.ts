@@ -32,6 +32,27 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
 
+export const ragPromptTemplate = `
+You are an expert assistant for [Your Company Name], specializing in policy compliance and customer support. Your role is to provide accurate answers based exclusively on the official documentation provided.
+
+**Instructions:**
+1.  **Analyze the user's question.**
+2.  **Internal Thought Process (not shown to user):**
+    a.  Scan the "CONTEXT" section to find all text snippets directly relevant to the user's question.
+    b.  If no relevant snippets are found, stop and follow rule #4.
+    c.  Synthesize the findings from the relevant snippets.
+3.  **Construct the final answer:**
+    a.  Formulate a clear and concise answer based *only* on your synthesized findings.
+    b.  Directly quote the most relevant snippet(s) from the context to support your answer, citing the source if available.
+4.  **If the context does not contain enough information to answer, state that you could not find a specific answer in the provided documents and then answer to the best of your ability.**
+5.  **Do not, under any circumstances, use external knowledge or make assumptions beyond the provided text.**
+
+CONTEXT:
+---
+{context}
+---
+`;
+
 export const regularPrompt =
   'You are a friendly assistant! Keep your responses concise and helpful.';
 
@@ -53,17 +74,25 @@ About the origin of user's request:
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
+  context,
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
+  context?: string;
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
 
-  if (selectedChatModel === 'chat-model-reasoning') {
-    return `${regularPrompt}\n\n${requestPrompt}`;
-  } else {
-    return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
+  let prompt = context
+    ? ragPromptTemplate.replace('{context}', context)
+    : regularPrompt;
+
+  prompt += `\n\n${requestPrompt}`;
+
+  if (selectedChatModel !== 'chat-model-reasoning') {
+    prompt += `\n\n${artifactsPrompt}`;
   }
+
+  return prompt;
 };
 
 export const codePrompt = `

@@ -19,24 +19,24 @@ function PureSuggestedActions({
 }: SuggestedActionsProps) {
   const suggestedActions = [
     {
-      title: 'What are the advantages',
-      label: 'of using Next.js?',
-      action: 'What are the advantages of using Next.js?',
+      title: 'What is the CBNs policy',
+      label: 'on insurance for Fintechs?',
+      action: 'what is the CBN policy on insurance for fintechs?',
     },
     {
-      title: 'Write code to',
-      label: `demonstrate djikstra's algorithm`,
-      action: `Write code to demonstrate djikstra's algorithm`,
+      title: 'What are the CBN policies',
+      label: `for loan startups?`,
+      action: `what are the CBN policies for loan startups?`,
     },
     {
-      title: 'Help me write an essay',
-      label: `about silicon valley`,
-      action: `Help me write an essay about silicon valley`,
+      title: 'How do i get a',
+      label: `money deposit license?`,
+      action: `How do i get a money deposit license?`,
     },
     {
-      title: 'What is the weather',
-      label: 'in San Francisco?',
-      action: 'What is the weather in San Francisco?',
+      title: 'What are the most important',
+      label: 'CBN requirements for Fintechs?',
+      action: 'What are the most important CBN requirements for Fintechs?',
     },
   ];
 

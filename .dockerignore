@@ -1,0 +1,26 @@
+# Docker
+Dockerfile
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+.next
+npm-debug.log*
+pnpm-debug.log*
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+
+# VSCode
+.vscode
+
+# Local environment
+.env.local

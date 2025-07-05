@@ -25,6 +25,7 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
+import { getRagContext } from '@/lib/rag/vxdf';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
 import { geolocation } from '@vercel/functions';
@@ -67,7 +68,8 @@ export async function POST(request: Request) {
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);
-  } catch (_) {
+  } catch (err) {
+    console.error('[POST /api/chat] Request body validation failed:', err);
     return new ChatSDKError('bad_request:api').toResponse();
   }
 
@@ -113,12 +115,7 @@ export async function POST(request: Request) {
 
     const previousMessages = await getMessagesByChatId({ id });
 
-    const messages = appendClientMessage({
-      // @ts-expect-error: todo add type conversion from DBMessage[] to UIMessage[]
-      messages: previousMessages,
-      message,
-    });
-
+    // Add geolocation info first to build requestHints
     const { longitude, latitude, city, country } = geolocation(request);
 
     const requestHints: RequestHints = {
@@ -127,6 +124,22 @@ export async function POST(request: Request) {
       city,
       country,
     };
+
+    const vxdfContext = await getRagContext(message.parts.map((p) => p.text).join(' '));
+
+    const systemPromptWithContext = systemPrompt({
+      selectedChatModel,
+      requestHints,
+      context: vxdfContext ?? undefined,
+    });
+
+    const messages = appendClientMessage({
+      // @ts-expect-error: todo add type conversion from DBMessage[] to UIMessage[]
+      messages: previousMessages,
+      message,
+    });
+
+    // save original saveMessages code remains below
 
     await saveMessages({
       messages: [
@@ -148,7 +161,7 @@ export async function POST(request: Request) {
       execute: (dataStream) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: systemPromptWithContext,
           messages,
           maxSteps: 5,
           experimental_activeTools:
@@ -164,7 +177,7 @@ export async function POST(request: Request) {
           experimental_generateMessageId: generateUUID,
           tools: {
             getWeather,
-            createDocument: createDocument({ session, dataStream }),
+            createDocument: createDocument({ session, dataStream, messages }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
               session,
@@ -234,9 +247,12 @@ export async function POST(request: Request) {
       return new Response(stream);
     }
   } catch (error) {
+    console.error('POST /api/chat unhandled error:', error);
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
+    // Fallback to generic 500 to satisfy Next.js requirement
+    return new Response('Internal Server Error', { status: 500 });
   }
 }
 
